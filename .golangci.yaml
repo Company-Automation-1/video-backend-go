@@ -1,0 +1,74 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - revive
+    - gocritic
+    - gocyclo
+    - misspell
+    - unconvert
+    - unparam
+    - goconst
+    - dupl
+    - gosec
+    - errname
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - gomodguard
+    - goprintffuncname
+    - lll
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - whitespace
+    - copyloopvar
+    - predeclared
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - performance
+        - style
+    gocyclo:
+      min-complexity: 15
+    misspell:
+      locale: US
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+        - name: var-naming
+          severity: warning
+        - name: package-comments
+          severity: warning
+  exclusions:
+    paths:
+      - vendor
+      - node_modules
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+

@@ -1,0 +1,40 @@
+server:
+  port: 8888
+  # mode: debug # debug, release(默认)
+
+database:
+  host: 192.168.14.70
+  port: 3311
+  username: root
+  password: root
+  database: video
+  charset: # 字符集(默认utf8mb4)
+  max_idle_conns: # 最大空闲连接数(默认10)
+  max_open_conns: # 最大连接数(默认100)
+  conn_max_lifetime: # 连接最大生命周期，单位：秒(默认3600)
+
+cors:
+  allow_origins: # 允许的源，空数组表示允许所有源
+    - "*"
+  allow_methods: # 允许的 HTTP 方法
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+    - "PATCH"
+  allow_headers: # 允许的请求头
+    - "Origin"
+    - "Content-Type"
+    - "Content-Length"
+    - "Accept-Encoding"
+    - "X-CSRF-Token"
+    - "Authorization"
+    - "accept"
+    - "origin"
+    - "Cache-Control"
+    - "X-Requested-With"
+  expose_headers: # 暴露的响应头
+    - "Content-Length"
+  allow_credentials: false # 是否允许携带凭证（Cookie等）
+  max_age: 43200 # 预检请求缓存时间（秒），12小时
