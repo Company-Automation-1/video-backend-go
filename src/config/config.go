@@ -13,6 +13,9 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	CORS     CORSConfig     `yaml:"cors"`
+	Redis    RedisConfig    `yaml:"redis"`
+	Email    EmailConfig    `yaml:"email"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 // ServerConfig 服务器配置
@@ -44,6 +47,31 @@ type CORSConfig struct {
 	MaxAge           int      `yaml:"max_age"`
 }
 
+// RedisConfig Redis配置
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
+}
+
+// EmailConfig 邮件配置
+type EmailConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	From     string `yaml:"from"`
+	SSL      bool   `yaml:"ssl"`
+	Timeout  int    `yaml:"timeout"`
+}
+
+// JWTConfig JWT配置
+type JWTConfig struct {
+	Secret     string `yaml:"secret"`      // JWT密钥
+	ExpireTime int    `yaml:"expire_time"` // 过期时间（小时）
+}
+
 // Load 从文件加载配置
 func Load(configPath string) (*Config, error) {
 	data, err := os.ReadFile(configPath) //nolint:gosec // 配置文件路径由调用方控制
@@ -60,6 +88,9 @@ func Load(configPath string) (*Config, error) {
 	cfg.Server.setDefaults()
 	cfg.Database.setDefaults()
 	cfg.CORS.setDefaults()
+	cfg.Redis.setDefaults()
+	cfg.Email.setDefaults()
+	cfg.JWT.setDefaults()
 
 	return &cfg, nil
 }
@@ -110,6 +141,39 @@ func (c *CORSConfig) setDefaults() {
 	// 如果 AllowOrigins 包含 "*"，强制 AllowCredentials 为 false
 	if len(c.AllowOrigins) == 1 && c.AllowOrigins[0] == "*" {
 		c.AllowCredentials = false
+	}
+}
+
+// setDefaults 设置Redis配置的默认值
+func (c *RedisConfig) setDefaults() {
+	if c.Host == "" {
+		c.Host = "localhost"
+	}
+	if c.Port == 0 {
+		c.Port = 6379
+	}
+	if c.DB == 0 && c.DB != 0 {
+		c.DB = 0
+	}
+}
+
+// setDefaults 设置邮件配置的默认值
+func (c *EmailConfig) setDefaults() {
+	if c.Port != 465 && c.Port != 587 {
+		c.Port = 587
+	}
+	if c.Timeout <= 0 {
+		c.Timeout = 10
+	}
+}
+
+// setDefaults 设置JWT配置的默认值
+func (c *JWTConfig) setDefaults() {
+	if c.Secret == "" {
+		c.Secret = "your-secret-key-change-in-production"
+	}
+	if c.ExpireTime == 0 {
+		c.ExpireTime = 24 // 默认24小时
 	}
 }
 

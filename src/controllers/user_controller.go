@@ -15,10 +15,10 @@ type UserController struct {
 	service *services.UserService
 }
 
-// NewUserController 创建新的用户控制器
-func NewUserController() *UserController {
+// NewUserController 创建用户控制器
+func NewUserController(service *services.UserService) *UserController {
 	return &UserController{
-		service: services.NewUserService(),
+		service: service,
 	}
 }
 
@@ -46,13 +46,35 @@ func (c *UserController) GetOne(ctx *gin.Context) error {
 	return nil
 }
 
-// Create 创建用户
-func (c *UserController) Create(ctx *gin.Context, req *dto.UserCreateRequest) error {
-	user := req.ToModel()
-	if err := c.service.Create(user); err != nil {
+// Register 用户注册
+func (c *UserController) Register(ctx *gin.Context, req *dto.UserRegisterRequest) error {
+	if err := c.service.Register(ctx.Request.Context(), req.Username, req.Email, req.Password, req.Captcha); err != nil {
 		return err
 	}
-	middleware.Created(ctx, vo.FromModel(user))
+	middleware.Created(ctx, "注册成功")
+	return nil
+}
+
+// SendVerificationCode 发送验证码
+func (c *UserController) SendVerificationCode(ctx *gin.Context, req *dto.SendVerificationCodeRequest) error {
+	if err := c.service.SendVerificationCode(ctx.Request.Context(), req.Email); err != nil {
+		return err
+	}
+	middleware.Success(ctx, "验证码已发送")
+	return nil
+}
+
+// UpdateEmail 更新邮箱
+func (c *UserController) UpdateEmail(ctx *gin.Context, req *dto.UserEmailUpdateRequest) error {
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := c.service.UpdateEmail(ctx.Request.Context(), userID, req.Email, req.Code); err != nil {
+		return err
+	}
+	middleware.Success(ctx, "邮箱更新成功")
 	return nil
 }
 
@@ -64,14 +86,11 @@ func (c *UserController) Update(ctx *gin.Context, req *dto.UserUpdateRequest) er
 	}
 
 	user := req.ToModel()
-	if err := c.service.Update(id, user); err != nil {
-		return err
-	}
-
-	updatedUser, err := c.service.GetOne(query.User.ID.Eq(id))
+	updatedUser, err := c.service.Update(id, user)
 	if err != nil {
 		return err
 	}
+
 	middleware.Success(ctx, vo.FromModel(updatedUser))
 	return nil
 }

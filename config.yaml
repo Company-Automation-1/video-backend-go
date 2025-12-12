@@ -38,3 +38,22 @@ cors:
     - "Content-Length"
   allow_credentials: false # 是否允许携带凭证（Cookie等）
   max_age: 43200 # 预检请求缓存时间（秒），12小时
+
+redis:
+  host: 192.168.14.70 # Redis 主机地址（请修改）
+  port: 6380 # Redis 端口（请修改）
+  password: "" # Redis 密码（如无密码留空）
+  db: 2 # Redis 数据库编号
+
+email:
+  host: smtp.163.com # SMTP 服务器地址（请修改）
+  port: 465 # SMTP 端口（465-SSL，587-STARTTLS）
+  user: 19065317381@163.com # SMTP 用户名（请修改）
+  password: RVs3zdHVP2L6r8F2 # SMTP 密码（请修改）
+  from: 19065317381@163.com # 发件人邮箱（请修改）
+  ssl: true # true: SSL(465端口), false: STARTTLS(587端口)
+  timeout: 10 # 连接超时时间（秒）
+
+jwt:
+  secret: your-secret-key-change-in-production # JWT密钥（生产环境请修改）
+  expire_time: 24 # Token过期时间（小时）

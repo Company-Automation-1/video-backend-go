@@ -1,5 +1,5 @@
-// Package database 提供数据库配置管理功能
-package database
+// Package infrastructure 基础设施层：数据库管理
+package infrastructure
 
 import (
 	"time"
@@ -16,8 +16,8 @@ type Manager struct {
 	db  *gorm.DB
 }
 
-// NewManager 创建新的配置管理器
-func NewManager(cfg *config.Config) *Manager {
+// NewDatabaseManager 创建新的数据库管理器
+func NewDatabaseManager(cfg *config.Config) *Manager {
 	return &Manager{
 		cfg: cfg,
 	}

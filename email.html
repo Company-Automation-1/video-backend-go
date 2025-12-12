@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>邮箱验证码</title>
+</head>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .container {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 30px;
+    margin-top: 20px;
+  }
+
+  .code-box {
+    background-color: #fff;
+    border: 2px dashed #4CAF50;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .code {
+    font-size: 32px;
+    font-weight: bold;
+    color: #4CAF50;
+    letter-spacing: 8px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+  }
+
+  .warning {
+    color: #ff9800;
+    font-size: 14px;
+    margin-top: 15px;
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>邮箱验证码</h2>
+    <p>您好，</p>
+    <p>您的验证码是：</p>
+    <div class="code-box">
+      <div class="code">{{.CODE}}</div>
+    </div>
+    <p class="warning">⚠️ 验证码有效期为 5 分钟，请勿泄露给他人。</p>
+    <p>如非本人操作，请忽略此邮件。</p>
+    <div class="footer">
+      <p>此邮件由系统自动发送，请勿回复。</p>
+    </div>
+  </div>
+</body>
+
+</html>
+
