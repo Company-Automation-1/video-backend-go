@@ -54,3 +54,14 @@ func GetMessage(err error) string {
 	}
 	return err.Error()
 }
+
+// WrapError 包装错误，保留原始错误的 code 和 message（如果已经是 AppError）
+// 如果不是 AppError，则转换为 AppError（默认 500）
+func WrapError(err error) *AppError {
+	// 如果已经是 AppError，直接返回
+	if appErr, ok := err.(*AppError); ok {
+		return appErr
+	}
+	// 标准 error，转换为 AppError（500）
+	return ErrInternalServer(err.Error())
+}

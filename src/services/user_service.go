@@ -86,18 +86,31 @@ func (s *UserService) SendVerificationCode(ctx context.Context, email string) er
 
 	_, err = s.captcha.SendCode(ctx, email, CaptchaTypeRegister)
 	if err != nil {
-		return tools.ErrInternalServer("验证码发送失败")
+		// 保留原始错误的 code 和 message（SendCode 已使用 AppError 处理内部错误）
+		return tools.WrapError(err)
 	}
 	return nil
 }
 
 // Register 用户注册（业务逻辑：验证码验证、密码加密、唯一性校验）
 func (s *UserService) Register(ctx context.Context, username, email, password, captcha string) error {
-	// 检查用户名是否已存在
-	existingUser, err := query.User.Where(query.User.Username.Eq(username)).First()
+	// 检查用户名或邮箱是否已存在（使用 OR 条件，只需查询一次）
+	existingUser, err := query.User.Where(query.User.Username.Eq(username)).
+		Or(query.User.Email.Eq(email)).
+		First()
 	if err == nil && existingUser != nil {
-		return tools.ErrBadRequest("用户名已存在")
+		// 判断是用户名冲突还是邮箱冲突
+		if existingUser.Username == username {
+			return tools.ErrBadRequest("用户名已存在")
+		}
+		if existingUser.Email == email {
+			return tools.ErrBadRequest("邮箱已被使用")
+		}
 	}
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return tools.ErrInternalServer("用户检查失败")
+	}
+
 	// 验证验证码
 	valid, err := s.captcha.VerifyCaptcha(ctx, email, captcha, CaptchaTypeRegister)
 	if err != nil {

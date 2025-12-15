@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Company-Automation-1/video-backend-go/src/infrastructure"
+	"github.com/Company-Automation-1/video-backend-go/src/tools"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -99,7 +100,7 @@ func (s *CaptchaService) SendCode(ctx context.Context, email string, captchaType
 		return "", err
 	}
 	if exists {
-		return "", errors.New("验证码已发送，请稍后再试")
+		return "", tools.ErrBadRequest("验证码已发送，请稍后再试") // 返回AppError，状态码400
 	}
 
 	code := s.GenerateCode() // 生成验证码
@@ -112,7 +113,7 @@ func (s *CaptchaService) SendCode(ctx context.Context, email string, captchaType
 		// 邮件发送失败，清理已存储的验证码，避免数据不一致
 		key := CaptchaPrefix + string(captchaType) + ":" + email
 		_ = s.redisClient.Del(ctx, key) //nolint:errcheck // 清理失败不影响错误返回
-		return "", errors.New("验证码发送失败")
+		return "", tools.ErrInternalServer("验证码发送失败")
 	}
 
 	return code, nil
