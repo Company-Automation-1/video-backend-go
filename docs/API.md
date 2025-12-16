@@ -14,6 +14,7 @@
 | POST | `/api/v1/users/update-email` | ✅ 用户 | 更新邮箱 | ✅ |
 | PUT | `/api/v1/users/:id` | 👤 本人 | 更新用户信息 | ✅ |
 | DELETE | `/api/v1/users/:id` | 👤 本人 | 删除用户 | - |
+| GET | `/api/v1/admin/admins` | 🔐 管理员 | 获取管理员列表 | - |
 | GET | `/api/v1/admin/users` | 🔐 管理员 | 管理员获取用户列表 | - |
 | GET | `/api/v1/admin/users/:id` | 🔐 管理员 | 管理员获取单个用户 | - |
 | PUT | `/api/v1/admin/users/:id` | 🔐 管理员 | 管理员更新用户 | ✅ |
@@ -181,7 +182,31 @@ Headers: Authorization: Bearer <admin_access_token>
 - 查询参数：
   - `page` (可选，默认1)：页码，从1开始
   - `page_size` (可选，默认10，最大100)：每页数量
-- 响应体：同"获取用户列表"接口（分页格式）
+- 响应体（分页格式）：
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {
+    "list": [
+      {
+        "id": 1,
+        "username": "string",
+        "email": "string",
+        "points": 0,
+        "created_at": 1234567890,
+        "updated_at": 1234567890
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 10,
+      "total": 100,
+      "pages": 10
+    }
+  }
+}
+```
 
 ---
 
@@ -196,7 +221,44 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 13. 管理员更新用户
+### 13. 获取管理员列表
+```
+GET /api/v1/admin/admins?page=1&page_size=10
+Headers: Authorization: Bearer <admin_access_token>
+```
+- 鉴权：🔐 管理员
+- 请求体：无
+- 路径参数：无
+- 查询参数：
+  - `page` (可选，默认1)：页码，从1开始
+  - `page_size` (可选，默认10，最大100)：每页数量
+- 响应体（分页格式）：
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {
+    "list": [
+      {
+        "id": 1,
+        "username": "string",
+        "created_at": 1234567890,
+        "updated_at": 1234567890
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 10,
+      "total": 100,
+      "pages": 10
+    }
+  }
+}
+```
+
+---
+
+### 14. 管理员更新用户
 ```
 PUT /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>
