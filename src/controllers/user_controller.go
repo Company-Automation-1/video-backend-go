@@ -32,6 +32,20 @@ func (c *UserController) GetList(ctx *gin.Context) error {
 	return nil
 }
 
+// GetProfile 获取个人信息（当前登录用户）
+func (c *UserController) GetProfile(ctx *gin.Context) error {
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+	user, err := c.service.GetOne(query.User.ID.Eq(userID))
+	if err != nil {
+		return err
+	}
+	middleware.Success(ctx, vo.FromModel(user))
+	return nil
+}
+
 // GetOne 获取单个用户
 func (c *UserController) GetOne(ctx *gin.Context) error {
 	id, err := parseID(ctx)

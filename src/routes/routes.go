@@ -37,6 +37,7 @@ func RegisterRoutes(
 	users.GET("/:id", middleware.AdminMiddleware(authService), middleware.Handle(userController.GetOne))
 
 	// 需要本人权限的路由
+	users.GET("/profile", middleware.AuthMiddleware(authService), middleware.Handle(userController.GetProfile))
 	users.POST("/update-email", middleware.AuthMiddleware(authService), middleware.Bind(userController.UpdateEmail))
 	users.PUT("/:id", middleware.SelfMiddleware(authService), middleware.Bind(userController.Update))
 	users.DELETE("/:id", middleware.SelfMiddleware(authService), middleware.Handle(userController.Delete))

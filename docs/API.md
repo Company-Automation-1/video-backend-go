@@ -10,6 +10,7 @@
 | POST | `/api/v1/auth/logout` | ✅ 用户 | 用户登出 | - |
 | POST | `/api/v1/users/send-verification-code` | ❌ 无 | 发送验证码 | ✅ |
 | POST | `/api/v1/users/register` | ❌ 无 | 用户注册 | ✅ |
+| GET | `/api/v1/users/profile` | 👤 本人 | 获取个人信息 | - |
 | GET | `/api/v1/users` | 🔐 管理员 | 获取用户列表 | - |
 | GET | `/api/v1/users/:id` | 🔐 管理员 | 获取单个用户 | - |
 | POST | `/api/v1/users/update-email` | ✅ 用户 | 更新邮箱 | ✅ |
@@ -22,8 +23,8 @@
 **鉴权说明：**
 - ❌ 无：无需认证
 - ✅ 用户：需要用户Token（AuthMiddleware）
-- 🔐 管理员：需要管理员Token（AdminMiddleware）
 - 👤 本人：需要用户Token且操作的是自己的数据（SelfMiddleware）
+- 🔐 管理员：需要管理员Token（AdminMiddleware）
 
 ---
 
@@ -109,7 +110,18 @@ POST /api/v1/users/register
 
 ---
 
-### 7. 获取用户列表
+### 7. 获取个人信息
+```
+GET /api/v1/users/profile
+Headers: Authorization: Bearer <access_token>
+```
+- 鉴权：👤 本人（从Token中获取用户ID，获取本人的个人信息）
+- 请求体：无
+- 路径参数：无
+
+---
+
+### 8. 获取用户列表
 ```
 GET /api/v1/users
 Headers: Authorization: Bearer <admin_access_token>
@@ -120,7 +132,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 8. 获取单个用户
+### 9. 获取单个用户
 ```
 GET /api/v1/users/:id
 Headers: Authorization: Bearer <admin_access_token>
@@ -131,7 +143,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 9. 更新邮箱
+### 10. 更新邮箱
 ```
 POST /api/v1/users/update-email
 Headers: Authorization: Bearer <access_token>
@@ -147,7 +159,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 10. 更新用户信息
+### 11. 更新用户信息
 ```
 PUT /api/v1/users/:id
 Headers: Authorization: Bearer <access_token>
@@ -171,7 +183,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 11. 删除用户
+### 12. 删除用户
 ```
 DELETE /api/v1/users/:id
 Headers: Authorization: Bearer <access_token>
@@ -182,7 +194,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 12. 管理员获取用户列表
+### 13. 管理员获取用户列表
 ```
 GET /api/v1/admin/users
 Headers: Authorization: Bearer <admin_access_token>
@@ -193,7 +205,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 13. 管理员获取单个用户
+### 14. 管理员获取单个用户
 ```
 GET /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>
@@ -204,7 +216,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 14. 管理员更新用户
+### 15. 管理员更新用户
 ```
 PUT /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>
