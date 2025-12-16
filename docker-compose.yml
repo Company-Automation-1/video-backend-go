@@ -1,12 +1,9 @@
 services:
   video-backend:
-    image: ${IMAGE:-video-backend}:latest
-    container_name: video-backend
+    image: ${IMAGE}
+    container_name: ${APP_NAME}
     ports:
       - "8888:8888"
-    volumes:
-      # config.yaml 将通过Jenkins部署时挂载
-      - ./config.yaml:/app/config.yaml:ro
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped

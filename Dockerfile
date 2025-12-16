@@ -28,10 +28,11 @@ WORKDIR /app
 # 从构建阶段复制二进制文件
 COPY --from=builder /build/app .
 
-# 注意：config.yaml 不在这里复制，将通过Jenkins Secret file挂载
+# 复制配置文件
+COPY config.yaml .
 
 # 暴露端口
 EXPOSE 8888
 
-# 运行应用（config.yaml路径可通过环境变量配置）
+# 运行应用
 CMD ["./app"]

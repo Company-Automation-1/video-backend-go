@@ -13,13 +13,12 @@ pipeline {
     environment {
         // 镜像配置
         IMAGE_NAME = 'video-backend'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-        
+        APP_NAME = 'video-backend'  // 容器名称
+
         // 部署配置
-        // 如果DEPLOY_HOST为空或localhost，则为本地部署；否则为远程部署
-        DEPLOY_HOST = 'localhost'          // 部署服务器地址，空或localhost=本地部署，否则=远程部署
-        DEPLOY_USER = ''                   // 远程部署时的SSH用户名（远程部署必填）
-        SSH_CREDENTIALS_ID = ''           // 远程部署时的SSH凭据ID（远程部署必填）
+        DEPLOY_HOST = 'localhost'          // 本地部署
+        DEPLOY_USER = ''                   // 远程部署时的SSH用户名
+        SSH_CREDENTIALS_ID = ''           // 远程部署时的SSH凭据ID
 
         // 配置文件凭据ID
         CONFIG_CREDENTIAL_ID = 'video-backend-config'
@@ -33,9 +32,17 @@ pipeline {
             }
         }
         
-        stage('运行测试') {
+        stage('测试') {
             steps {
+                // Go 的测试命令，运行项目中的测试文件（*_test.go），-v 参数用于显示详细输出
                 sh 'go test -v ./... || true'
+            }
+            post {
+                always {
+                    // 测试后清理配置文件，避免污染 git
+                    sh 'rm -f config.yaml || true'
+                    sh 'ls -la ./'
+                }
             }
         }
 
@@ -49,65 +56,47 @@ pipeline {
 
         stage('构建Docker镜像') {
             steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                """
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
         stage('部署') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'master'
-                }
-            }
             steps {
                 script {
                     def isLocal = !"${DEPLOY_HOST}" || "${DEPLOY_HOST}" == 'localhost' || "${DEPLOY_HOST}" == '127.0.0.1'
                     
-                    withCredentials([file(credentialsId: "${CONFIG_CREDENTIAL_ID}", variable: 'CONFIG_FILE')]) {
-                        if (isLocal) {
-                            // 本地部署：直接使用当前工作目录
+                    if (isLocal) {
+                        sh """
+                            export IMAGE=${IMAGE_NAME}:latest
+                            export APP_NAME=${APP_NAME}
+                            docker compose down -v || true
+                            docker compose up -d
+                            docker compose ps
+                        """
+                    } else {
+                        sshagent(["${SSH_CREDENTIALS_ID}"]) {
                             sh """
-                                cp "\$CONFIG_FILE" ./config.yaml
-                                IMAGE=${IMAGE_NAME}:latest docker-compose down || true
-                                IMAGE=${IMAGE_NAME}:latest docker-compose up -d
-                                docker-compose ps
+                                echo "远程部署待实现"
+                                exit 1
                             """
-                        } else {
-                            // 远程部署：直接在远程服务器执行
-                            sshagent(["${SSH_CREDENTIALS_ID}"]) {
-                                sh """
-                                    set -e
-                                    IMAGE_TAR=${IMAGE_NAME}-${IMAGE_TAG}.tar.gz
-                                    
-                                    # 保存并传输镜像
-                                    docker save ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest | gzip > "\${IMAGE_TAR}"
-                                    scp "\${IMAGE_TAR}" ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/
-                                    
-                                    # 传输配置文件
-                                    scp "\$CONFIG_FILE" ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/config.yaml
-                                    scp docker-compose.yml ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/docker-compose.yml
-                                    
-                                    # 在远程服务器执行部署
-                                    ssh ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
-                                        set -e
-                                        cd /tmp
-                                        docker load < /tmp/${IMAGE_NAME}-${IMAGE_TAG}.tar.gz
-                                        rm -f /tmp/${IMAGE_NAME}-${IMAGE_TAG}.tar.gz
-                                        IMAGE=${IMAGE_NAME}:latest docker-compose down || true
-                                        IMAGE=${IMAGE_NAME}:latest docker-compose up -d
-                                        docker-compose ps
-                                    EOF
-                                    
-                                    rm -f "\${IMAGE_TAR}"
-                                """
-                            }
                         }
                     }
                 }
+            }
+        }
+
+        stage('服务状态') {
+            steps {
+                sh """
+                    sleep 5
+                    for i in 1 2 3 4 5 6 7 8 9 10; do
+                        curl -f -s http://host.docker.internal:8888/health > /dev/null && echo "✅ 服务健康检查通过" && exit 0
+                        sleep 2
+                    done
+                    echo "❌ 服务健康检查失败"
+                    docker compose logs --tail=20
+                    exit 1
+                """
             }
         }
     }
@@ -118,7 +107,7 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ 构建成功！镜像: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "✅ 构建成功！镜像: ${IMAGE_NAME}:latest"
         }
         failure {
             echo "❌ 构建失败！"

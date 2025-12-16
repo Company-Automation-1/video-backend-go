@@ -2,8 +2,7 @@
 *.exe
 app
 
-# 忽略配置文件（通过Jenkins Secret file挂载）
-config.yaml
+# 忽略其他配置文件
 config.*.yaml
 *.local.yaml
 
