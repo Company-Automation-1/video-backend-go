@@ -14,6 +14,7 @@
 | POST | `/api/v1/users/update-email` | ✅ 用户 | 更新邮箱 | ✅ |
 | PUT | `/api/v1/users/:id` | 👤 本人 | 更新用户信息 | ✅ |
 | DELETE | `/api/v1/users/:id` | 👤 本人 | 删除用户 | - |
+| GET | `/api/v1/admin/profile` | 🔐 管理员 | 获取管理员个人信息 | - |
 | GET | `/api/v1/admin/admins` | 🔐 管理员 | 获取管理员列表 | - |
 | GET | `/api/v1/admin/users` | 🔐 管理员 | 管理员获取用户列表 | - |
 | GET | `/api/v1/admin/users/:id` | 🔐 管理员 | 管理员获取单个用户 | - |
@@ -171,7 +172,18 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 11. 管理员获取用户列表
+### 11. 获取管理员个人信息
+```
+GET /api/v1/admin/profile
+Headers: Authorization: Bearer <admin_access_token>
+```
+- 鉴权：🔐 管理员（从Token中获取管理员ID，获取本人的个人信息）
+- 请求体：无
+- 路径参数：无
+
+---
+
+### 12. 管理员获取用户列表
 ```
 GET /api/v1/admin/users?page=1&page_size=10
 Headers: Authorization: Bearer <admin_access_token>
@@ -210,7 +222,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 12. 管理员获取单个用户
+### 13. 管理员获取单个用户
 ```
 GET /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>
@@ -221,7 +233,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 13. 获取管理员列表
+### 14. 获取管理员列表
 ```
 GET /api/v1/admin/admins?page=1&page_size=10
 Headers: Authorization: Bearer <admin_access_token>
@@ -258,7 +270,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 14. 管理员更新用户
+### 15. 管理员更新用户
 ```
 PUT /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>

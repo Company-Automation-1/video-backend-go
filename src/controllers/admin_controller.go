@@ -5,6 +5,7 @@ import (
 	"github.com/Company-Automation-1/video-backend-go/src/api/dto"
 	"github.com/Company-Automation-1/video-backend-go/src/api/vo"
 	"github.com/Company-Automation-1/video-backend-go/src/middleware"
+	"github.com/Company-Automation-1/video-backend-go/src/query"
 	"github.com/Company-Automation-1/video-backend-go/src/services"
 	"github.com/Company-Automation-1/video-backend-go/src/tools"
 	"github.com/gin-gonic/gin"
@@ -51,3 +52,16 @@ func (c *AdminController) GetList(ctx *gin.Context) error {
 	return nil
 }
 
+// GetProfile 获取个人信息（当前登录管理员）
+func (c *AdminController) GetProfile(ctx *gin.Context) error {
+	adminID, err := middleware.GetAdminID(ctx)
+	if err != nil {
+		return err
+	}
+	admin, err := c.adminService.GetOne(query.Admin.ID.Eq(adminID))
+	if err != nil {
+		return err
+	}
+	middleware.Success(ctx, vo.FromAdminModel(admin))
+	return nil
+}

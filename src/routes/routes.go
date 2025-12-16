@@ -44,6 +44,7 @@ func RegisterRoutes(
 	// 管理员管理路由（需要管理员认证）
 	adminService := services.NewAdminService()
 	adminController := controllers.NewAdminController(adminService)
+	admin.GET("/profile", middleware.AdminMiddleware(authService), middleware.Handle(adminController.GetProfile))
 	admins := admin.Group("/admins")
 	admins.Use(middleware.AdminMiddleware(authService))
 	admins.GET("", middleware.Handle(adminController.GetList))
