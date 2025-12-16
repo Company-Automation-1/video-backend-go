@@ -11,8 +11,6 @@
 | POST | `/api/v1/users/send-verification-code` | ❌ 无 | 发送验证码 | ✅ |
 | POST | `/api/v1/users/register` | ❌ 无 | 用户注册 | ✅ |
 | GET | `/api/v1/users/profile` | 👤 本人 | 获取个人信息 | - |
-| GET | `/api/v1/users` | 🔐 管理员 | 获取用户列表 | - |
-| GET | `/api/v1/users/:id` | 🔐 管理员 | 获取单个用户 | - |
 | POST | `/api/v1/users/update-email` | ✅ 用户 | 更新邮箱 | ✅ |
 | PUT | `/api/v1/users/:id` | 👤 本人 | 更新用户信息 | ✅ |
 | DELETE | `/api/v1/users/:id` | 👤 本人 | 删除用户 | - |
@@ -121,29 +119,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 8. 获取用户列表
-```
-GET /api/v1/users
-Headers: Authorization: Bearer <admin_access_token>
-```
-- 鉴权：🔐 管理员
-- 请求体：无
-- 路径参数：无
-
----
-
-### 9. 获取单个用户
-```
-GET /api/v1/users/:id
-Headers: Authorization: Bearer <admin_access_token>
-```
-- 鉴权：🔐 管理员
-- 请求体：无
-- 路径参数：`id` (用户ID)
-
----
-
-### 10. 更新邮箱
+### 8. 更新邮箱
 ```
 POST /api/v1/users/update-email
 Headers: Authorization: Bearer <access_token>
@@ -159,7 +135,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 11. 更新用户信息
+### 9. 更新用户信息
 ```
 PUT /api/v1/users/:id
 Headers: Authorization: Bearer <access_token>
@@ -183,7 +159,7 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 12. 删除用户
+### 10. 删除用户
 ```
 DELETE /api/v1/users/:id
 Headers: Authorization: Bearer <access_token>
@@ -194,18 +170,22 @@ Headers: Authorization: Bearer <access_token>
 
 ---
 
-### 13. 管理员获取用户列表
+### 11. 管理员获取用户列表
 ```
-GET /api/v1/admin/users
+GET /api/v1/admin/users?page=1&page_size=10
 Headers: Authorization: Bearer <admin_access_token>
 ```
 - 鉴权：🔐 管理员
 - 请求体：无
 - 路径参数：无
+- 查询参数：
+  - `page` (可选，默认1)：页码，从1开始
+  - `page_size` (可选，默认10，最大100)：每页数量
+- 响应体：同"获取用户列表"接口（分页格式）
 
 ---
 
-### 14. 管理员获取单个用户
+### 12. 管理员获取单个用户
 ```
 GET /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>
@@ -216,7 +196,7 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 15. 管理员更新用户
+### 13. 管理员更新用户
 ```
 PUT /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>

@@ -22,16 +22,6 @@ func NewUserController(service *services.UserService) *UserController {
 	}
 }
 
-// GetList 获取用户列表
-func (c *UserController) GetList(ctx *gin.Context) error {
-	users, err := c.service.GetList()
-	if err != nil {
-		return err
-	}
-	middleware.Success(ctx, vo.FromModelList(users))
-	return nil
-}
-
 // GetProfile 获取个人信息（当前登录用户）
 func (c *UserController) GetProfile(ctx *gin.Context) error {
 	userID, err := middleware.GetUserID(ctx)
@@ -39,20 +29,6 @@ func (c *UserController) GetProfile(ctx *gin.Context) error {
 		return err
 	}
 	user, err := c.service.GetOne(query.User.ID.Eq(userID))
-	if err != nil {
-		return err
-	}
-	middleware.Success(ctx, vo.FromModel(user))
-	return nil
-}
-
-// GetOne 获取单个用户
-func (c *UserController) GetOne(ctx *gin.Context) error {
-	id, err := parseID(ctx)
-	if err != nil {
-		return err
-	}
-	user, err := c.service.GetOne(query.User.ID.Eq(id))
 	if err != nil {
 		return err
 	}

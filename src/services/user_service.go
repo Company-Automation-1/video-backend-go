@@ -24,9 +24,13 @@ func NewUserService(captcha *CaptchaService) *UserService {
 	}
 }
 
-// GetList 获取用户列表
-func (s *UserService) GetList(conditions ...gen.Condition) ([]*models.User, error) {
-	return query.User.Where(conditions...).Find()
+// GetListWithPagination 获取用户列表（分页）
+func (s *UserService) GetListWithPagination(
+	offset, limit int,
+	conditions ...gen.Condition,
+) ([]*models.User, int64, error) {
+	users, count, err := query.User.Where(conditions...).FindByPage(offset, limit)
+	return users, count, err
 }
 
 // GetOne 获取单个用户

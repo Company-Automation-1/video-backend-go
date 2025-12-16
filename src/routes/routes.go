@@ -32,10 +32,6 @@ func RegisterRoutes(
 	users.POST("/send-verification-code", middleware.Bind(userController.SendVerificationCode))
 	users.POST("/register", middleware.Bind(userController.Register))
 
-	// 需要管理员权限的路由
-	users.GET("", middleware.AdminMiddleware(authService), middleware.Handle(userController.GetList))
-	users.GET("/:id", middleware.AdminMiddleware(authService), middleware.Handle(userController.GetOne))
-
 	// 需要本人权限的路由
 	users.GET("/profile", middleware.AuthMiddleware(authService), middleware.Handle(userController.GetProfile))
 	users.POST("/update-email", middleware.AuthMiddleware(authService), middleware.Bind(userController.UpdateEmail))

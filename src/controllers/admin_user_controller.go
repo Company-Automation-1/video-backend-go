@@ -7,6 +7,7 @@ import (
 	"github.com/Company-Automation-1/video-backend-go/src/middleware"
 	"github.com/Company-Automation-1/video-backend-go/src/query"
 	"github.com/Company-Automation-1/video-backend-go/src/services"
+	"github.com/Company-Automation-1/video-backend-go/src/tools"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,13 +23,32 @@ func NewAdminUserController(userService *services.UserService) *AdminUserControl
 	}
 }
 
-// GetList 获取用户列表（管理员权限）
+// GetList 获取用户列表（管理员权限，分页）
 func (c *AdminUserController) GetList(ctx *gin.Context) error {
-	users, err := c.userService.GetList()
+	// 绑定分页参数（从查询参数获取）
+	var paginationReq dto.PaginationRequest
+	if err := ctx.ShouldBindQuery(&paginationReq); err != nil {
+		return tools.ErrBadRequest(err.Error())
+	}
+
+	// 获取分页数据
+	users, total, err := c.userService.GetListWithPagination(
+		paginationReq.GetOffset(),
+		paginationReq.GetLimit(),
+	)
 	if err != nil {
 		return err
 	}
-	middleware.Success(ctx, vo.FromModelList(users))
+
+	// 转换为VO并返回分页响应
+	userList := vo.FromModelList(users)
+	paginatedResp := vo.NewPaginatedResponse(
+		userList,
+		paginationReq.GetPage(),
+		paginationReq.GetPageSize(),
+		total,
+	)
+	middleware.Success(ctx, paginatedResp)
 	return nil
 }
 
