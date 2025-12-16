@@ -1,6 +1,6 @@
 server:
   port: 8888
-  # mode: debug # debug, release(默认)
+  mode: debug # debug, release(默认)
 
 database:
   host: 192.168.14.70

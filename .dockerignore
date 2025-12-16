@@ -1,0 +1,37 @@
+# 忽略可执行文件
+*.exe
+app
+
+# 忽略配置文件（通过Jenkins Secret file挂载）
+config.yaml
+config.*.yaml
+*.local.yaml
+
+# 忽略Git相关
+.git
+.gitignore
+
+# 忽略文档
+docs/
+*.md
+
+# 忽略SQL文件
+sql/
+
+# 忽略生成脚本
+gen/
+
+# 忽略日志
+*.log
+
+# 忽略临时文件
+*.tmp
+*.tar.gz
+
+# 忽略IDE配置
+.vscode/
+.idea/
+
+# 忽略Makefile（构建时不需要）
+Makefile
+
