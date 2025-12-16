@@ -8,6 +8,7 @@ type User struct {
 	Email         string `gorm:"type:varchar(100);not null;uniqueIndex:idx_email;comment:邮箱" json:"email"`
 	Password      string `gorm:"type:varchar(100);not null;comment:密码" json:"-"`
 	EmailVerified bool   `gorm:"default:false;comment:邮箱是否已验证" json:"email_verified"`
+	Points        *int   `gorm:"default:null;comment:积分" json:"points"`
 	CreatedAt     int64  `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt     int64  `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
 }

@@ -9,14 +9,19 @@ import (
 )
 
 // RegisterRoutes 注册所有路由
-func RegisterRoutes(r *gin.Engine, userService *services.UserService, authService *services.AuthService) {
+func RegisterRoutes(
+	r *gin.Engine,
+	userService *services.UserService,
+	authService *services.AuthService,
+) {
 	// API v1 路由组
 	v1 := r.Group("/api/v1")
 
 	// 认证路由（无需鉴权）
 	authController := controllers.NewAuthController(authService)
 	auth := v1.Group("/auth")
-	auth.POST("/login", middleware.Bind(authController.Login))
+	auth.POST("/user/login", middleware.Bind(authController.UserLogin))
+	auth.POST("/admin/login", middleware.Bind(authController.AdminLogin))
 	auth.POST("/logout", middleware.AuthMiddleware(authService), middleware.Handle(authController.Logout))
 
 	// 用户路由
@@ -27,13 +32,24 @@ func RegisterRoutes(r *gin.Engine, userService *services.UserService, authServic
 	users.POST("/send-verification-code", middleware.Bind(userController.SendVerificationCode))
 	users.POST("/register", middleware.Bind(userController.Register))
 
-	// 需要鉴权的路由
-	users.Use(middleware.AuthMiddleware(authService))
-	users.GET("", middleware.Handle(userController.GetList))
-	users.GET("/:id", middleware.Handle(userController.GetOne))
-	users.POST("/update-email", middleware.Bind(userController.UpdateEmail))
-	users.PUT("/:id", middleware.Bind(userController.Update))
-	users.DELETE("/:id", middleware.Handle(userController.Delete))
+	// 需要管理员权限的路由
+	users.GET("", middleware.AdminMiddleware(authService), middleware.Handle(userController.GetList))
+	users.GET("/:id", middleware.AdminMiddleware(authService), middleware.Handle(userController.GetOne))
+
+	// 需要本人权限的路由
+	users.POST("/update-email", middleware.AuthMiddleware(authService), middleware.Bind(userController.UpdateEmail))
+	users.PUT("/:id", middleware.SelfMiddleware(authService), middleware.Bind(userController.Update))
+	users.DELETE("/:id", middleware.SelfMiddleware(authService), middleware.Handle(userController.Delete))
+
+	// 管理员路由
+	admin := v1.Group("/admin")
+	// 管理员用户管理路由（需要管理员认证）
+	adminUserController := controllers.NewAdminUserController(userService)
+	adminUsers := admin.Group("/users")
+	adminUsers.Use(middleware.AdminMiddleware(authService))
+	adminUsers.GET("", middleware.Handle(adminUserController.GetList))
+	adminUsers.GET("/:id", middleware.Handle(adminUserController.GetOne))
+	adminUsers.PUT("/:id", middleware.Bind(adminUserController.Update))
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {

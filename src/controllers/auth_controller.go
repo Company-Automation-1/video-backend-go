@@ -2,6 +2,7 @@
 package controllers
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Company-Automation-1/video-backend-go/src/api/dto"
@@ -23,9 +24,13 @@ func NewAuthController(authService *services.AuthService) *AuthController {
 	}
 }
 
-// Login 用户登录
-func (c *AuthController) Login(ctx *gin.Context, req *dto.UserLoginRequest) error {
-	accessToken, expiresIn, err := c.authService.Login(ctx.Request.Context(), req.Username, req.Password)
+// _login 登录逻辑
+func (c *AuthController) _login(
+	ctx *gin.Context,
+	username, password string,
+	loginFunc func(context.Context, string, string) (string, int64, error),
+) error {
+	accessToken, expiresIn, err := loginFunc(ctx.Request.Context(), username, password)
 	if err != nil {
 		return err
 	}
@@ -37,6 +42,16 @@ func (c *AuthController) Login(ctx *gin.Context, req *dto.UserLoginRequest) erro
 
 	middleware.Success(ctx, tokenVO)
 	return nil
+}
+
+// UserLogin 用户登录
+func (c *AuthController) UserLogin(ctx *gin.Context, req *dto.UserLoginRequest) error {
+	return c._login(ctx, req.Username, req.Password, c.authService.UserLogin)
+}
+
+// AdminLogin 管理员登录
+func (c *AuthController) AdminLogin(ctx *gin.Context, req *dto.AdminLoginRequest) error {
+	return c._login(ctx, req.Username, req.Password, c.authService.AdminLogin)
 }
 
 // Logout 用户登出

@@ -32,6 +32,8 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Username = field.NewString(tableName, "username")
 	_user.Email = field.NewString(tableName, "email")
 	_user.Password = field.NewString(tableName, "password")
+	_user.EmailVerified = field.NewBool(tableName, "email_verified")
+	_user.Points = field.NewInt(tableName, "points")
 	_user.CreatedAt = field.NewInt64(tableName, "created_at")
 	_user.UpdatedAt = field.NewInt64(tableName, "updated_at")
 
@@ -43,13 +45,15 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 type user struct {
 	userDo
 
-	ALL       field.Asterisk
-	ID        field.Uint   // ID
-	Username  field.String // 用户名
-	Email     field.String // 邮箱
-	Password  field.String // 密码
-	CreatedAt field.Int64  // 创建时间
-	UpdatedAt field.Int64  // 更新时间
+	ALL           field.Asterisk
+	ID            field.Uint   // ID
+	Username      field.String // 用户名
+	Email         field.String // 邮箱
+	Password      field.String // 密码
+	EmailVerified field.Bool   // 邮箱是否已验证
+	Points        field.Int    // 积分
+	CreatedAt     field.Int64  // 创建时间
+	UpdatedAt     field.Int64  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -70,6 +74,8 @@ func (u *user) updateTableName(table string) *user {
 	u.Username = field.NewString(table, "username")
 	u.Email = field.NewString(table, "email")
 	u.Password = field.NewString(table, "password")
+	u.EmailVerified = field.NewBool(table, "email_verified")
+	u.Points = field.NewInt(table, "points")
 	u.CreatedAt = field.NewInt64(table, "created_at")
 	u.UpdatedAt = field.NewInt64(table, "updated_at")
 
@@ -88,11 +94,13 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 6)
+	u.fieldMap = make(map[string]field.Expr, 8)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["username"] = u.Username
 	u.fieldMap["email"] = u.Email
 	u.fieldMap["password"] = u.Password
+	u.fieldMap["email_verified"] = u.EmailVerified
+	u.fieldMap["points"] = u.Points
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 }

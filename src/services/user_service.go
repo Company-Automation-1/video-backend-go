@@ -57,8 +57,20 @@ func (s *UserService) Update(id uint, user *models.User) (*models.User, error) {
 		user.Password = string(hashedPassword)
 	}
 
+	// 如果提供了积分（包括置空），单独更新
+	if user.Points != nil {
+		_, err := query.User.Where(query.User.ID.Eq(id)).Update(query.User.Points, user.Points)
+		if err != nil {
+			return nil, tools.ErrInternalServer("积分更新失败")
+		}
+	}
+
+	// 移除Points字段，避免在Updates中处理（已单独处理）
+	userForUpdate := *user
+	userForUpdate.Points = nil
+
 	// 使用 Updates 只更新有值的字段（忽略零值字段，自动更新 UpdatedAt）
-	_, err := query.User.Where(query.User.ID.Eq(id)).Updates(user)
+	_, err := query.User.Where(query.User.ID.Eq(id)).Updates(&userForUpdate)
 	if err != nil {
 		return nil, tools.ErrInternalServer("用户更新失败")
 	}

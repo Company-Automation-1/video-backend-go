@@ -2,8 +2,12 @@
 package middleware
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Company-Automation-1/video-backend-go/src/tools"
@@ -43,31 +47,71 @@ func Created(ctx *gin.Context, data interface{}) {
 	})
 }
 
+// setError 设置错误响应（将 error 转换为 Result）
+// 供中间件和 Handle 使用，统一错误处理
+func setError(ctx *gin.Context, err error) {
+	code := tools.GetCode(err)
+	message := tools.GetMessage(err)
+	ctx.Set(ctxKeyResult, &Result{
+		Code:      code,
+		Success:   false,
+		Message:   message,
+		Timestamp: time.Now().Unix(),
+	})
+}
+
 // Handle 装饰器函数，自动处理错误
 // 使用方式：Handle(func(ctx *gin.Context) error { ... })
 func Handle(fn func(*gin.Context) error) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := fn(ctx); err != nil {
-			code := tools.GetCode(err)
-			message := tools.GetMessage(err)
-			ctx.Set(ctxKeyResult, &Result{
-				Code:      code,
-				Success:   false,
-				Message:   message,
-				Timestamp: time.Now().Unix(),
-			})
+			setError(ctx, err)
 		}
 	}
 }
 
 // Bind 自动绑定和校验请求参数
 // 使用方式：Bind(func(ctx *gin.Context, req *dto.UserCreateRequest) error { ... })
+// 功能：禁止未知字段，并验证 binding 标签（如 required, min, max 等）
 func Bind[T any](fn func(*gin.Context, *T) error) gin.HandlerFunc {
 	return Handle(func(ctx *gin.Context) error {
 		var req T
-		if err := ctx.ShouldBindJSON(&req); err != nil {
+
+		// 读取请求体（需要保存，因为后续需要多次使用）
+		// 1. 读取 Request.Body → bodyBytes
+		bodyBytes, err := io.ReadAll(ctx.Request.Body)
+		if err != nil {
+			return tools.ErrBadRequest("读取请求体失败")
+		}
+
+		// 使用 json.Decoder 并禁止未知字段
+		// 2. 使用 bodyBytes 创建 decoder（不读取 Request.Body）
+		decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
+		decoder.DisallowUnknownFields()
+
+		if err := decoder.Decode(&req); err != nil {
+			// 检查是否是未知字段错误
+			errStr := err.Error()
+			if fieldName, ok := strings.CutPrefix(errStr, "json: unknown field "); ok {
+				// 提取字段名：错误格式通常是 "json: unknown field \"fieldname\""
+				fieldName = strings.Trim(fieldName, "\"")
+				return tools.ErrBadRequest(fmt.Sprintf("请求包含未知字段: %s，请检查请求参数", fieldName))
+			}
+			// 检查是否是类型错误
+			if typeErr, ok := err.(*json.UnmarshalTypeError); ok {
+				return tools.ErrBadRequest(fmt.Sprintf("字段 '%s' 类型错误，期望 %s，实际 %s", typeErr.Field, typeErr.Type, typeErr.Value))
+			}
+			// 其他 JSON 解析错误
+			return tools.ErrBadRequest(fmt.Sprintf("JSON格式错误: %v", err))
+		}
+
+		// 验证 binding 标签（如 required, min, max, email 等）
+		// 3. 恢复 Request.Body（供 ShouldBind 使用）
+		ctx.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		if err := ctx.ShouldBind(&req); err != nil {
 			return tools.ErrBadRequest(err.Error())
 		}
+
 		return fn(ctx, &req)
 	})
 }

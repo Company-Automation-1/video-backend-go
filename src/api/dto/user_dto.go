@@ -28,6 +28,7 @@ type UserEmailUpdateRequest struct {
 type UserUpdateRequest struct {
 	Username *string `json:"username,omitempty" binding:"omitempty,min=3,max=100"`
 	Password *string `json:"password,omitempty" binding:"omitempty,min=6"`
+	Points   *int    `json:"points,omitempty"`
 }
 
 // ToModel 转换为模型（更新）
@@ -38,6 +39,9 @@ func (r *UserUpdateRequest) ToModel() *models.User {
 	}
 	if r.Password != nil {
 		user.Password = *r.Password
+	}
+	if r.Points != nil {
+		user.Points = r.Points // 直接传递指针，支持置空（nil）和置0（&0）
 	}
 	return user
 }

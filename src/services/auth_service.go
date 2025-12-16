@@ -33,16 +33,25 @@ func NewAuthService(jwtConfig *config.JWTConfig, redis *infrastructure.Redis) *A
 type Claims struct {
 	UserID   uint   `json:"user_id"`
 	Username string `json:"username"`
+	Role     string `json:"role"` // "user" 或 "admin"
 	jwt.RegisteredClaims
 }
 
-// Login 用户登录
-func (s *AuthService) Login(
-	ctx context.Context,
+// loginInfo 登录信息
+type loginInfo struct {
+	ID       uint
+	Username string
+	Password string
+}
+
+// _login 公共登录逻辑
+func (s *AuthService) _login(
 	username, password string,
+	getLoginInfo func(string) (*loginInfo, error),
+	role string,
 ) (accessToken string, expiresIn int64, err error) {
-	// 查询用户
-	user, err := query.User.Where(query.User.Username.Eq(username)).First()
+	// 查询登录信息
+	info, err := getLoginInfo(username)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return "", 0, tools.ErrBadRequest("用户名或密码错误")
@@ -51,12 +60,12 @@ func (s *AuthService) Login(
 	}
 
 	// 验证密码
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(info.Password), []byte(password)); err != nil {
 		return "", 0, tools.ErrBadRequest("用户名或密码错误")
 	}
 
 	// 生成Token
-	accessToken, expiresIn, err = s.generateToken(user.ID, user.Username)
+	accessToken, expiresIn, err = s.generateToken(info.ID, info.Username, role)
 	if err != nil {
 		return "", 0, tools.ErrInternalServer("Token生成失败")
 	}
@@ -64,14 +73,53 @@ func (s *AuthService) Login(
 	return accessToken, expiresIn, nil
 }
 
+// UserLogin 用户登录
+func (s *AuthService) UserLogin(
+	ctx context.Context,
+	username, password string,
+) (accessToken string, expiresIn int64, err error) {
+	return s._login(username, password, func(u string) (*loginInfo, error) {
+		user, err := query.User.Where(query.User.Username.Eq(u)).First()
+		if err != nil {
+			return nil, err
+		}
+		return &loginInfo{
+			ID:       user.ID,
+			Username: user.Username,
+			Password: user.Password,
+		}, nil
+	}, "user")
+}
+
+// AdminLogin 管理员登录
+func (s *AuthService) AdminLogin(
+	ctx context.Context,
+	username, password string,
+) (accessToken string, expiresIn int64, err error) {
+	return s._login(username, password, func(u string) (*loginInfo, error) {
+		admin, err := query.Admin.Where(query.Admin.Username.Eq(u)).First()
+		if err != nil {
+			return nil, err
+		}
+		return &loginInfo{
+			ID:       admin.ID,
+			Username: admin.Username,
+			Password: admin.Password,
+		}, nil
+	}, "admin")
+}
+
 // generateToken 生成Access Token
-func (s *AuthService) generateToken(userID uint, username string) (tokenString string, expiresIn int64, err error) {
+func (s *AuthService) generateToken(
+	userID uint, username, role string,
+) (tokenString string, expiresIn int64, err error) {
 	now := time.Now()
 	expiresIn = now.Add(time.Duration(s.jwtConfig.ExpireTime) * time.Hour).Unix()
 
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Unix(expiresIn, 0)),
 			IssuedAt:  jwt.NewNumericDate(now),

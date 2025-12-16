@@ -10,16 +10,22 @@ type UserVO struct {
 	ID        uint   `json:"id"`
 	Username  string `json:"username"`
 	Email     string `json:"email"`
+	Points    int    `json:"points"` // 前端显示：NULL 显示为 0
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`
 }
 
 // FromModel 从模型转换为VO
 func FromModel(user *models.User) *UserVO {
+	points := 0
+	if user.Points != nil {
+		points = *user.Points
+	}
 	return &UserVO{
 		ID:        user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
+		Points:    points, // NULL 时显示为 0
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
