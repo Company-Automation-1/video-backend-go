@@ -35,51 +35,41 @@ func (s *UserService) GetListWithPagination(
 	return users, count, err
 }
 
-// GetListWithQuery 获取用户列表（支持条件查询、模糊查询、范围查询）
+// GetListWithQuery 获取用户列表（条件查询、模糊查询、范围查询）
 func (s *UserService) GetListWithQuery(queryReq *dto.UserListQueryRequest) ([]*models.User, int64, error) {
-	// 构建查询条件
-	var conditions []gen.Condition
+	// 1. 构建基础查询条件
+	conditions := tools.NewConditionBuilder().
+		EqUint(&query.User.ID, queryReq.ID).
+		EqString(&query.User.Username, queryReq.Username).
+		EqString(&query.User.Email, queryReq.Email).
+		EqBool(&query.User.EmailVerified, queryReq.EmailVerified).
+		Like(&query.User.Username, queryReq.UsernameLike).
+		Like(&query.User.Email, queryReq.EmailLike).
+		GteInt64(&query.User.CreatedAt, queryReq.CreatedAtMin).
+		LteInt64(&query.User.CreatedAt, queryReq.CreatedAtMax).
+		Build()
 
-	// 精确查询
-	if queryReq.ID != nil {
-		conditions = append(conditions, query.User.ID.Eq(*queryReq.ID))
-	}
-	if queryReq.Username != "" {
-		conditions = append(conditions, query.User.Username.Eq(queryReq.Username))
-	}
-	if queryReq.Email != "" {
-		conditions = append(conditions, query.User.Email.Eq(queryReq.Email))
-	}
-	if queryReq.EmailVerified != nil {
-		conditions = append(conditions, query.User.EmailVerified.Is(*queryReq.EmailVerified))
-	}
-
-	// 模糊查询
-	if queryReq.UsernameLike != "" {
-		conditions = append(conditions, query.User.Username.Like("%"+queryReq.UsernameLike+"%"))
-	}
-	if queryReq.EmailLike != "" {
-		conditions = append(conditions, query.User.Email.Like("%"+queryReq.EmailLike+"%"))
-	}
-
-	// 范围查询
-	if queryReq.PointsMin != nil {
-		conditions = append(conditions, query.User.Points.Gte(*queryReq.PointsMin))
-	}
-	if queryReq.PointsMax != nil {
-		conditions = append(conditions, query.User.Points.Lte(*queryReq.PointsMax))
-	}
-	if queryReq.CreatedAtMin != nil {
-		conditions = append(conditions, query.User.CreatedAt.Gte(*queryReq.CreatedAtMin))
-	}
-	if queryReq.CreatedAtMax != nil {
-		conditions = append(conditions, query.User.CreatedAt.Lte(*queryReq.CreatedAtMax))
-	}
-
-	// 构建查询
 	q := query.User.Where(conditions...)
 
-	// 添加排序
+	// 2. 积分范围查询（特殊处理：NULL 在业务逻辑上等于 0）
+	// points_min: 当值为 0 时匹配 NULL 或 0，当值 > 0 时只匹配 points >= min（不包含 NULL）
+	if queryReq.PointsMin != nil {
+		if *queryReq.PointsMin == 0 {
+			q = q.Where(query.User.Points.IsNull()).Or(query.User.Points.Eq(0))
+		} else {
+			q = q.Where(query.User.Points.Gte(*queryReq.PointsMin))
+		}
+	}
+	// points_max: 当值为 0 时匹配 NULL 或 0，当值 > 0 时匹配 NULL 或 points <= max（包含 NULL）
+	if queryReq.PointsMax != nil {
+		if *queryReq.PointsMax == 0 {
+			q = q.Where(query.User.Points.IsNull()).Or(query.User.Points.Eq(0))
+		} else {
+			q = q.Where(query.User.Points.IsNull()).Or(query.User.Points.Lte(*queryReq.PointsMax))
+		}
+	}
+
+	// 3. 排序（字段存在时应用排序）
 	if queryReq.OrderBy != "" {
 		if orderField, ok := query.User.GetFieldByName(queryReq.OrderBy); ok {
 			if strings.EqualFold(queryReq.Order, "asc") {
@@ -90,7 +80,7 @@ func (s *UserService) GetListWithQuery(queryReq *dto.UserListQueryRequest) ([]*m
 		}
 	}
 
-	// 执行分页查询
+	// 4. 执行分页查询
 	users, count, err := q.FindByPage(queryReq.GetOffset(), queryReq.GetLimit())
 	return users, count, err
 }

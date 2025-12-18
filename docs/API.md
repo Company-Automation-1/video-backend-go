@@ -204,8 +204,8 @@ Headers: Authorization: Bearer <admin_access_token>
     - `username_like` (可选)：用户名（模糊匹配，LIKE %value%）
     - `email_like` (可选)：邮箱（模糊匹配，LIKE %value%）
   - **范围查询：**
-    - `points_min` (可选)：积分最小值（>=）
-    - `points_max` (可选)：积分最大值（<=）
+    - `points_min` (可选)：积分最小值（>=）。**特殊逻辑**：当值为 0 时，匹配积分为 NULL 或 0 的记录（NULL 在逻辑上等于 0）
+    - `points_max` (可选)：积分最大值（<=）。**特殊逻辑**：当值为 0 时，匹配积分为 NULL 或 0 的记录；当值 > 0 时，匹配积分为 NULL 或 <= 该值的记录（NULL 在逻辑上等于 0）
     - `created_at_min` (可选)：创建时间最小值（>=，Unix时间戳）
     - `created_at_max` (可选)：创建时间最大值（<=，Unix时间戳）
   - **排序：**
