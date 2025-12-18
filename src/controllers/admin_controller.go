@@ -23,19 +23,16 @@ func NewAdminController(adminService *services.AdminService) *AdminController {
 	}
 }
 
-// GetList 获取管理员列表（分页）
+// GetList 获取管理员列表（管理员权限，分页，支持条件查询、模糊查询、范围查询）
 func (c *AdminController) GetList(ctx *gin.Context) error {
-	// 绑定分页参数（从查询参数获取）
-	var paginationReq dto.PaginationRequest
-	if err := ctx.ShouldBindQuery(&paginationReq); err != nil {
+	// 绑定查询参数（从查询参数获取）
+	var queryReq dto.AdminListQueryRequest
+	if err := ctx.ShouldBindQuery(&queryReq); err != nil {
 		return tools.ErrBadRequest(err.Error())
 	}
 
-	// 获取分页数据
-	admins, total, err := c.adminService.GetListWithPagination(
-		paginationReq.GetOffset(),
-		paginationReq.GetLimit(),
-	)
+	// 调用服务层获取数据
+	admins, total, err := c.adminService.GetListWithQuery(&queryReq)
 	if err != nil {
 		return err
 	}
@@ -44,8 +41,8 @@ func (c *AdminController) GetList(ctx *gin.Context) error {
 	adminList := vo.FromAdminModelList(admins)
 	paginatedResp := vo.NewPaginatedResponse(
 		adminList,
-		paginationReq.GetPage(),
-		paginationReq.GetPageSize(),
+		queryReq.GetPage(),
+		queryReq.GetPageSize(),
 		total,
 	)
 	middleware.Success(ctx, paginatedResp)
