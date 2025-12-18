@@ -3,7 +3,9 @@ package services
 
 import (
 	"context"
+	"strings"
 
+	"github.com/Company-Automation-1/video-backend-go/src/api/dto"
 	"github.com/Company-Automation-1/video-backend-go/src/models"
 	"github.com/Company-Automation-1/video-backend-go/src/query"
 	"github.com/Company-Automation-1/video-backend-go/src/tools"
@@ -30,6 +32,66 @@ func (s *UserService) GetListWithPagination(
 	conditions ...gen.Condition,
 ) ([]*models.User, int64, error) {
 	users, count, err := query.User.Where(conditions...).FindByPage(offset, limit)
+	return users, count, err
+}
+
+// GetListWithQuery 获取用户列表（支持条件查询、模糊查询、范围查询）
+func (s *UserService) GetListWithQuery(queryReq *dto.UserListQueryRequest) ([]*models.User, int64, error) {
+	// 构建查询条件
+	var conditions []gen.Condition
+
+	// 精确查询
+	if queryReq.ID != nil {
+		conditions = append(conditions, query.User.ID.Eq(*queryReq.ID))
+	}
+	if queryReq.Username != "" {
+		conditions = append(conditions, query.User.Username.Eq(queryReq.Username))
+	}
+	if queryReq.Email != "" {
+		conditions = append(conditions, query.User.Email.Eq(queryReq.Email))
+	}
+	if queryReq.EmailVerified != nil {
+		conditions = append(conditions, query.User.EmailVerified.Is(*queryReq.EmailVerified))
+	}
+
+	// 模糊查询
+	if queryReq.UsernameLike != "" {
+		conditions = append(conditions, query.User.Username.Like("%"+queryReq.UsernameLike+"%"))
+	}
+	if queryReq.EmailLike != "" {
+		conditions = append(conditions, query.User.Email.Like("%"+queryReq.EmailLike+"%"))
+	}
+
+	// 范围查询
+	if queryReq.PointsMin != nil {
+		conditions = append(conditions, query.User.Points.Gte(*queryReq.PointsMin))
+	}
+	if queryReq.PointsMax != nil {
+		conditions = append(conditions, query.User.Points.Lte(*queryReq.PointsMax))
+	}
+	if queryReq.CreatedAtMin != nil {
+		conditions = append(conditions, query.User.CreatedAt.Gte(*queryReq.CreatedAtMin))
+	}
+	if queryReq.CreatedAtMax != nil {
+		conditions = append(conditions, query.User.CreatedAt.Lte(*queryReq.CreatedAtMax))
+	}
+
+	// 构建查询
+	q := query.User.Where(conditions...)
+
+	// 添加排序
+	if queryReq.OrderBy != "" {
+		if orderField, ok := query.User.GetFieldByName(queryReq.OrderBy); ok {
+			if strings.EqualFold(queryReq.Order, "asc") {
+				q = q.Order(orderField.Asc())
+			} else {
+				q = q.Order(orderField.Desc())
+			}
+		}
+	}
+
+	// 执行分页查询
+	users, count, err := q.FindByPage(queryReq.GetOffset(), queryReq.GetLimit())
 	return users, count, err
 }
 

@@ -13,7 +13,7 @@ type AdminVO struct {
 	UpdatedAt int64  `json:"updated_at"`
 }
 
-// FromModel 从模型转换为VO
+// FromAdminModel 从模型转换为VO
 func FromAdminModel(admin *models.Admin) *AdminVO {
 	return &AdminVO{
 		ID:        admin.ID,
@@ -31,4 +31,3 @@ func FromAdminModelList(admins []*models.Admin) []*AdminVO {
 	}
 	return result
 }
-

@@ -23,19 +23,16 @@ func NewAdminUserController(userService *services.UserService) *AdminUserControl
 	}
 }
 
-// GetList 获取用户列表（管理员权限，分页）
+// GetList 获取用户列表（管理员权限，分页，支持条件查询、模糊查询、范围查询）
 func (c *AdminUserController) GetList(ctx *gin.Context) error {
-	// 绑定分页参数（从查询参数获取）
-	var paginationReq dto.PaginationRequest
-	if err := ctx.ShouldBindQuery(&paginationReq); err != nil {
+	// 绑定查询参数（从查询参数获取）
+	var queryReq dto.UserListQueryRequest
+	if err := ctx.ShouldBindQuery(&queryReq); err != nil {
 		return tools.ErrBadRequest(err.Error())
 	}
 
-	// 获取分页数据
-	users, total, err := c.userService.GetListWithPagination(
-		paginationReq.GetOffset(),
-		paginationReq.GetLimit(),
-	)
+	// 调用服务层获取数据
+	users, total, err := c.userService.GetListWithQuery(&queryReq)
 	if err != nil {
 		return err
 	}
@@ -44,8 +41,8 @@ func (c *AdminUserController) GetList(ctx *gin.Context) error {
 	userList := vo.FromModelList(users)
 	paginatedResp := vo.NewPaginatedResponse(
 		userList,
-		paginationReq.GetPage(),
-		paginationReq.GetPageSize(),
+		queryReq.GetPage(),
+		queryReq.GetPageSize(),
 		total,
 	)
 	middleware.Success(ctx, paginatedResp)
@@ -82,4 +79,3 @@ func (c *AdminUserController) Update(ctx *gin.Context, req *dto.UserUpdateReques
 	middleware.Success(ctx, vo.FromModel(updatedUser))
 	return nil
 }
-
