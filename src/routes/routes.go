@@ -34,13 +34,12 @@ func RegisterRoutes(
 
 	// 需要本人权限的路由
 	users.GET("/profile", middleware.AuthMiddleware(authService), middleware.Handle(userController.GetProfile))
-	users.POST("/update-email", middleware.AuthMiddleware(authService), middleware.Bind(userController.UpdateEmail))
 	users.PUT("/:id", middleware.SelfMiddleware(authService), middleware.Bind(userController.Update))
 	users.DELETE("/:id", middleware.SelfMiddleware(authService), middleware.Handle(userController.Delete))
 
 	// 管理员路由
 	admin := v1.Group("/admin")
-	
+
 	// 管理员管理路由（需要管理员认证）
 	adminService := services.NewAdminService()
 	adminController := controllers.NewAdminController(adminService)
@@ -48,7 +47,7 @@ func RegisterRoutes(
 	admins := admin.Group("/admins")
 	admins.Use(middleware.AdminMiddleware(authService))
 	admins.GET("", middleware.Handle(adminController.GetList))
-	
+
 	// 管理员用户管理路由（需要管理员认证）
 	adminUserController := controllers.NewAdminUserController(userService)
 	adminUsers := admin.Group("/users")

@@ -63,15 +63,14 @@ func (c *AdminUserController) GetOne(ctx *gin.Context) error {
 	return nil
 }
 
-// Update 更新用户信息（包括积分）（管理员权限）
-func (c *AdminUserController) Update(ctx *gin.Context, req *dto.UserUpdateRequest) error {
+// Update 更新用户积分（管理员权限，只允许修改积分）
+func (c *AdminUserController) Update(ctx *gin.Context, req *dto.AdminUserUpdateRequest) error {
 	id, err := parseID(ctx)
 	if err != nil {
 		return err
 	}
 
-	user := req.ToModel()
-	updatedUser, err := c.userService.Update(id, user)
+	updatedUser, err := c.userService.UpdatePoints(id, req.Points)
 	if err != nil {
 		return err
 	}

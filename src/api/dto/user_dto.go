@@ -18,17 +18,12 @@ type UserRegisterRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// UserEmailUpdateRequest 邮箱更新请求
-type UserEmailUpdateRequest struct {
-	Email string `json:"email" binding:"required,email"`
-	Code  string `json:"code" binding:"required,len=6"`
-}
-
-// UserUpdateRequest 更新用户请求
+// UserUpdateRequest 更新用户请求（用户自己更新，不允许修改积分）
 type UserUpdateRequest struct {
-	Username *string `json:"username,omitempty" binding:"omitempty,min=3,max=100"`
-	Password *string `json:"password,omitempty" binding:"omitempty,min=6"`
-	Points   *int    `json:"points,omitempty"`
+	Username  *string `json:"username,omitempty" binding:"omitempty,min=3,max=100"`
+	Password  *string `json:"password,omitempty" binding:"omitempty,min=6"`
+	Email     *string `json:"email,omitempty" binding:"omitempty,email"`      // 新邮箱
+	EmailCode *string `json:"email_code,omitempty" binding:"omitempty,len=6"` // 邮箱验证码（更新邮箱时必填）
 }
 
 // ToModel 转换为模型（更新）
@@ -40,8 +35,13 @@ func (r *UserUpdateRequest) ToModel() *models.User {
 	if r.Password != nil {
 		user.Password = *r.Password
 	}
-	if r.Points != nil {
-		user.Points = r.Points // 直接传递指针，支持置空（nil）和置0（&0）
+	if r.Email != nil {
+		user.Email = *r.Email
 	}
 	return user
+}
+
+// AdminUserUpdateRequest 管理员更新用户请求（只允许修改积分）
+type AdminUserUpdateRequest struct {
+	Points *int `json:"points,omitempty"` // 积分值。null=置空（等同于0），0=置为0，其他数值=设置对应积分
 }

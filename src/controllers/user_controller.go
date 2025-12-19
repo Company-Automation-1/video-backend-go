@@ -54,21 +54,7 @@ func (c *UserController) SendVerificationCode(ctx *gin.Context, req *dto.SendVer
 	return nil
 }
 
-// UpdateEmail 更新邮箱
-func (c *UserController) UpdateEmail(ctx *gin.Context, req *dto.UserEmailUpdateRequest) error {
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err := c.service.UpdateEmail(ctx.Request.Context(), userID, req.Email, req.Code); err != nil {
-		return err
-	}
-	middleware.Success(ctx, "邮箱更新成功")
-	return nil
-}
-
-// Update 更新用户
+// Update 更新用户（用户自己更新，不允许修改积分）
 func (c *UserController) Update(ctx *gin.Context, req *dto.UserUpdateRequest) error {
 	id, err := parseID(ctx)
 	if err != nil {
@@ -76,7 +62,7 @@ func (c *UserController) Update(ctx *gin.Context, req *dto.UserUpdateRequest) er
 	}
 
 	user := req.ToModel()
-	updatedUser, err := c.service.Update(id, user)
+	updatedUser, err := c.service.Update(ctx.Request.Context(), id, user, req.EmailCode)
 	if err != nil {
 		return err
 	}
