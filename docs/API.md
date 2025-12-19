@@ -15,6 +15,7 @@
 | DELETE | `/api/v1/users/:id` | 👤 本人 | 删除用户 | - |
 | GET | `/api/v1/admin/profile` | 🔐 管理员 | 获取管理员个人信息 | - |
 | GET | `/api/v1/admin/admins` | 🔐 管理员 | 获取管理员列表 | - |
+| POST | `/api/v1/admin/admins` | 🔐 管理员 | 创建管理员 | ✅ |
 | GET | `/api/v1/admin/users` | 🔐 管理员 | 管理员获取用户列表 | - |
 | GET | `/api/v1/admin/users/:id` | 🔐 管理员 | 管理员获取单个用户 | - |
 | PUT | `/api/v1/admin/users/:id` | 🔐 管理员 | 管理员更新用户 | ✅ |
@@ -269,7 +270,43 @@ Headers: Authorization: Bearer <admin_access_token>
 
 ---
 
-### 15. 管理员更新用户
+### 15. 创建管理员
+```
+POST /api/v1/admin/admins
+Headers: Authorization: Bearer <admin_access_token>
+```
+- 鉴权：🔐 管理员
+- 路径参数：无
+- 请求体：
+```json
+{
+  "username": "string",  // 必填，3-100字符
+  "password": "string"   // 必填，最少6位
+}
+```
+- 说明：
+  - 用户名必须唯一，如果已存在会返回错误
+  - 密码会自动加密存储
+  - 创建成功返回创建的管理员信息（不包含密码）
+- 响应体：
+```json
+{
+  "code": 201,
+  "success": true,
+  "message": "创建成功",
+  "data": {
+    "id": 1,
+    "username": "admin123",
+    "created_at": 1234567890,
+    "updated_at": 1234567890
+  },
+  "timestamp": 1234567890
+}
+```
+
+---
+
+### 16. 管理员更新用户
 ```
 PUT /api/v1/admin/users/:id
 Headers: Authorization: Bearer <admin_access_token>

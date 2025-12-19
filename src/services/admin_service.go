@@ -8,6 +8,7 @@ import (
 	"github.com/Company-Automation-1/video-backend-go/src/models"
 	"github.com/Company-Automation-1/video-backend-go/src/query"
 	"github.com/Company-Automation-1/video-backend-go/src/tools"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 )
@@ -68,4 +69,58 @@ func (s *AdminService) GetOne(conditions ...gen.Condition) (*models.Admin, error
 		return nil, tools.ErrNotFound("管理员不存在")
 	}
 	return admin, err
+}
+
+// Create 创建管理员
+func (s *AdminService) Create(username, password string) (*models.Admin, error) {
+	if err := s.validateUsername(username, nil); err != nil {
+		return nil, err
+	}
+
+	hashedPassword, err := s.encryptPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
+	admin := &models.Admin{
+		Username: username,
+		Password: hashedPassword,
+	}
+
+	if err := query.Admin.Create(admin); err != nil {
+		return nil, tools.ErrInternalServer("管理员创建失败")
+	}
+
+	return admin, nil
+}
+
+// validateUsername 校验用户名唯一性
+func (s *AdminService) validateUsername(username string, excludeID *uint) error {
+	if username == "" {
+		return nil
+	}
+	conditions := []gen.Condition{query.Admin.Username.Eq(username)}
+	if excludeID != nil {
+		conditions = append(conditions, query.Admin.ID.Neq(*excludeID))
+	}
+	existingAdmin, err := query.Admin.Where(conditions...).First()
+	if err == nil && existingAdmin != nil {
+		return tools.ErrBadRequest("用户名已存在")
+	}
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return tools.ErrInternalServer("用户名检查失败")
+	}
+	return nil
+}
+
+// encryptPassword 加密密码
+func (s *AdminService) encryptPassword(password string) (string, error) {
+	if password == "" {
+		return "", nil
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", tools.ErrInternalServer("密码设置失败")
+	}
+	return string(hashedPassword), nil
 }

@@ -62,3 +62,13 @@ func (c *AdminController) GetProfile(ctx *gin.Context) error {
 	middleware.Success(ctx, vo.FromAdminModel(admin))
 	return nil
 }
+
+// Create 创建管理员（管理员权限）
+func (c *AdminController) Create(ctx *gin.Context, req *dto.AdminCreateRequest) error {
+	admin, err := c.adminService.Create(req.Username, req.Password)
+	if err != nil {
+		return err
+	}
+	middleware.Created(ctx, vo.FromAdminModel(admin))
+	return nil
+}

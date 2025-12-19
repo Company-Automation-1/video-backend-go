@@ -7,3 +7,8 @@ type AdminLoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// AdminCreateRequest 创建管理员请求
+type AdminCreateRequest struct {
+	Username string `json:"username" binding:"required,min=3,max=100"`
+	Password string `json:"password" binding:"required,min=6"`
+}
