@@ -16,40 +16,42 @@ const ctxKeyRole = "role"
 
 const roleAdmin = "admin"
 
+const bearerPrefix = "Bearer"
+
 // const roleUser = "user"
 
-// verifyToken 验证Token并设置上下文（公共逻辑）
-func verifyToken(ctx *gin.Context, authService *services.AuthService) (*services.Claims, bool) {
-	// 从Header获取Token
+// verifyTokenOnly 纯函数：只验证Token，不设置上下文，不中断请求，返回Claims和error
+func verifyTokenOnly(ctx *gin.Context, authService *services.AuthService) (*services.Claims, error) {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
-		setError(ctx, tools.ErrUnauthorized("未提供认证Token"))
-		ctx.Abort() // 中断请求链
-		return nil, false
+		return nil, tools.ErrUnauthorized("未提供认证Token")
 	}
 
-	// 解析Bearer Token
 	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		setError(ctx, tools.ErrUnauthorized("Token格式错误"))
-		ctx.Abort()
-		return nil, false
+	if len(parts) != 2 || parts[0] != bearerPrefix {
+		return nil, tools.ErrUnauthorized("Token格式错误")
 	}
 
 	tokenString := parts[1]
 
-	// 检查黑名单
 	if authService.IsTokenBlacklisted(ctx.Request.Context(), tokenString) {
-		setError(ctx, tools.ErrUnauthorized("Token已失效"))
-		ctx.Abort()
-		return nil, false
+		return nil, tools.ErrUnauthorized("Token已失效")
 	}
 
-	// 验证Token
 	claims, err := authService.VerifyToken(tokenString)
 	if err != nil {
-		setError(ctx, tools.ErrUnauthorized("Token无效或已过期"))
-		ctx.Abort()
+		return nil, tools.ErrUnauthorized("Token无效或已过期")
+	}
+
+	return claims, nil
+}
+
+// verifyToken 验证Token并设置上下文（公共逻辑）
+func verifyToken(ctx *gin.Context, authService *services.AuthService) (*services.Claims, bool) {
+	claims, err := verifyTokenOnly(ctx, authService)
+	if err != nil {
+		setError(ctx, err)
+		ctx.Abort() // 中断请求链
 		return nil, false
 	}
 

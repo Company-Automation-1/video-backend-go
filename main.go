@@ -54,7 +54,8 @@ func main() {
 	r.Use(middleware.Logger())                  // 日志记录
 
 	// 注册路由
-	routes.RegisterRoutes(r, userService, authService)
+	pythonURL := "http://192.168.14.70:6869" // Python服务地址
+	routes.RegisterRoutes(r, userService, authService, pythonURL)
 
 	// 启动服务器
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)

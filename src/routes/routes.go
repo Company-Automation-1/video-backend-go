@@ -13,6 +13,7 @@ func RegisterRoutes(
 	r *gin.Engine,
 	userService *services.UserService,
 	authService *services.AuthService,
+	pythonURL string,
 ) {
 	// API v1 路由组
 	v1 := r.Group("/api/v1")
@@ -56,6 +57,10 @@ func RegisterRoutes(
 	adminUsers.GET("", middleware.Handle(adminUserController.GetList))
 	adminUsers.GET("/:id", middleware.Handle(adminUserController.GetOne))
 	adminUsers.PUT("/:id", middleware.Bind(adminUserController.Update))
+
+	// Python服务透传（部分接口需要认证）
+	apiPy := r.Group("/api/py")
+	apiPy.Any("/*path", middleware.PythonProxy(pythonURL, userService, authService))
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
