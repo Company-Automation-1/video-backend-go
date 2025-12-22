@@ -90,6 +90,25 @@ func AdminMiddleware(authService *services.AuthService) gin.HandlerFunc {
 	}
 }
 
+// SelfMiddleware 本人验证中间件（验证Token并确保是本人操作）
+func SelfMiddleware(authService *services.AuthService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		// 先验证 Token
+		if _, ok := verifyToken(ctx, authService); !ok {
+			return
+		}
+
+		// 检查是否是本人
+		if !IsSelf(ctx) {
+			setError(ctx, tools.ErrForbidden("只能操作自己的数据"))
+			ctx.Abort()
+			return
+		}
+
+		ctx.Next()
+	}
+}
+
 // _getID 从上下文获取ID（公共方法）
 func _getID(ctx *gin.Context, roleName string) (uint, error) {
 	id, _ := ctx.Get(ctxKeyUserID)
@@ -155,23 +174,4 @@ func IsSelf(ctx *gin.Context) bool {
 
 	// 比较是否相同
 	return userID == uint(pathID)
-}
-
-// SelfMiddleware 本人验证中间件（验证Token并确保是本人操作）
-func SelfMiddleware(authService *services.AuthService) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		// 先验证 Token
-		if _, ok := verifyToken(ctx, authService); !ok {
-			return
-		}
-
-		// 检查是否是本人
-		if !IsSelf(ctx) {
-			setError(ctx, tools.ErrForbidden("只能操作自己的数据"))
-			ctx.Abort()
-			return
-		}
-
-		ctx.Next()
-	}
 }
