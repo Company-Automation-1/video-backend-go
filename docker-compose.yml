@@ -3,7 +3,7 @@ services:
     image: ${IMAGE}
     container_name: ${APP_NAME}
     ports:
-      - "8888:8888"
+      - "8893:8888"
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped

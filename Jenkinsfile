@@ -90,7 +90,7 @@ pipeline {
                 sh """
                     sleep 5
                     for i in 1 2 3 4 5 6 7 8 9 10; do
-                        curl -f -s http://host.docker.internal:8888/health > /dev/null && echo "✅ 服务健康检查通过" && exit 0
+                        curl -f -s http://host.docker.internal:8893/health > /dev/null && echo "✅ 服务健康检查通过" && exit 0
                         sleep 2
                     done
                     echo "❌ 服务健康检查失败"
